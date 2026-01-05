@@ -1,7 +1,7 @@
+import querystring from "querystring";
+
 import { RequestConfigType } from "@/types/request-config";
 import { IG_GraphQLResponseDto } from "@/features/api/_dto/instagram";
-
-import querystring from "querystring";
 
 function generateRequestBody(shortcode: string) {
   return querystring.stringify({
@@ -30,7 +30,7 @@ function generateRequestBody(shortcode: string) {
     fb_api_caller_class: "RelayModern",
     fb_api_req_friendly_name: "PolarisPostActionLoadPostQueryQuery",
     variables: JSON.stringify({
-      shortcode: shortcode,
+      shortcode,
       fetch_tagged_user_count: null,
       hoisted_comment_id: null,
       hoisted_reply_id: null,
@@ -52,7 +52,13 @@ export function getInstagramPostGraphQL(
 ) {
   const requestUrl = new URL("https://www.instagram.com/graphql/query");
 
+  const cookies = [
+    `sessionid=${process.env.IG_SESSIONID}`,
+    `csrftoken=${process.env.IG_CSRFTOKEN}`,
+  ].join("; ");
+
   return fetch(requestUrl, {
+    method: "POST",
     credentials: "include",
     headers: {
       "User-Agent":
@@ -63,20 +69,16 @@ export function getInstagramPostGraphQL(
       "X-FB-Friendly-Name": "PolarisPostActionLoadPostQueryQuery",
       "X-BLOKS-VERSION-ID":
         "0d99de0d13662a50e0958bcb112dd651f70dea02e1859073ab25f8f2a477de96",
-      "X-CSRFToken": "uy8OpI1kndx4oUHjlHaUfu",
+      "X-CSRFToken": process.env.IG_CSRFTOKEN!,
       "X-IG-App-ID": "1217981644879628",
       "X-FB-LSD": "AVrqPT0gJDo",
       "X-ASBD-ID": "359341",
-      "Sec-GPC": "1",
-      "Sec-Fetch-Dest": "empty",
-      "Sec-Fetch-Mode": "cors",
-      "Sec-Fetch-Site": "same-origin",
+      Cookie: cookies,
       Pragma: "no-cache",
       "Cache-Control": "no-cache",
     },
     referrer: `https://www.instagram.com/p/${data.shortcode}/`,
     body: generateRequestBody(data.shortcode),
-    method: "POST",
     mode: "cors",
     ...requestConfig,
   });
