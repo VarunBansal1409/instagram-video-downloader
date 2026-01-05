@@ -1,7 +1,8 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { IG_GraphQLResponseDto } from "@/features/api/_dto/instagram";
-
 import { getInstagramPostGraphQL } from "./utils";
 
 interface RouteContext {
@@ -21,15 +22,12 @@ export async function GET(_: NextRequest, context: RouteContext) {
   }
 
   try {
-    const response = await getInstagramPostGraphQL({
-      shortcode,
-    });
+    const response = await getInstagramPostGraphQL({ shortcode });
 
-    const status = response.status;
-
-    if (status === 200) {
+    if (response.status === 200) {
       const { data } = (await response.json()) as IG_GraphQLResponseDto;
-      if (!data.xdt_shortcode_media) {
+
+      if (!data?.xdt_shortcode_media) {
         return NextResponse.json(
           { error: "notFound", message: "post not found" },
           { status: 404 }
@@ -46,14 +44,14 @@ export async function GET(_: NextRequest, context: RouteContext) {
       return NextResponse.json({ data }, { status: 200 });
     }
 
-    if (status === 404) {
+    if (response.status === 404) {
       return NextResponse.json(
         { error: "notFound", message: "post not found" },
         { status: 404 }
       );
     }
 
-    if (status === 429 || status === 401) {
+    if (response.status === 401 || response.status === 429) {
       return NextResponse.json(
         {
           error: "tooManyRequests",
